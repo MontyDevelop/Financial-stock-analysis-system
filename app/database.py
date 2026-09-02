@@ -113,10 +113,6 @@ def verify_password(stored_hash_string: str, candidate_password: str) -> bool:
 # SESSION SMOKE TEST & RELATIONAL VALIDATION
 
 if __name__ == "__main__":
-    print("==================================================")
-    print("  RUNNING DATABASE & SECURITY SMOKE TEST")
-    print("==================================================")
-
     init_db()
 
     # Test Hashing & Constant-Time Verification
