@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if is_register %}Register - Stock Analytics{% else %}Sign In - Stock Analytics{% endif %}
+{% endblock %}
+
+{% block content %}
+    <h2>Stock Analytics System - {% if is_register %}Register{% else %}Login View{% endif %}</h2>
+
+    <form method="POST" action="{% if is_register %}{{ url_for('register') }}{% else %}{{ url_for('login') }}{% endif %}">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required autofocus autocomplete="off">
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <div class="btn-group">
+            {% if is_register %}
+                <button type="submit" class="btn btn-blue">Confirm Registration</button>
+                <a href="{{ url_for('login') }}" class="btn btn-green">Back to Login</a>
+            {% else %}
+                <button type="submit" class="btn btn-green">Login</button>
+                <a href="{{ url_for('register') }}" class="btn btn-blue">Register</a>
+            {% endif %}
+        </div>
+    </form>
+{% endblock %}

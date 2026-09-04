@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Financial Stock Analytics System{% endblock %}</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .container { max-width: 460px; margin: 70px auto; background: #ffffff; padding: 32px; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+        h2 { text-align: center; color: #0f172a; margin-bottom: 24px; font-size: 21px; font-weight: 700; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; color: #334155; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        input[type="text"]:focus, input[type="password"]:focus { border-color: #2563eb; outline: none; }
+        .btn-group { display: flex; gap: 12px; margin-top: 22px; }
+        .btn { flex: 1; padding: 11px; border: none; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; }
+        .btn-green { background-color: #16a34a; color: #ffffff; }
+        .btn-blue { background-color: #2563eb; color: #ffffff; }
+        .btn:hover { opacity: 0.92; }
+        
+        /* Flash message banner matching Wireframe Section 3.2.4 */
+        
+        .alert-banner { margin-top: 22px; padding: 12px; border-radius: 4px; font-size: 13.5px; text-align: center; font-weight: 600; border-style: dashed; border-width: 1.5px; }
+        .alert-danger { background-color: #fef2f2; color: #b91c1c; border-color: #f87171; }
+        .alert-success { background-color: #f0fdf4; color: #15803d; border-color: #4ade80; }
+        .alert-info { background-color: #f0f9ff; color: #0369a1; border-color: #38bdf8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% block content %}{% endblock %}
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert-banner alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+</body>
+</html>
