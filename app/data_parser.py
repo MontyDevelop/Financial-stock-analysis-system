@@ -131,8 +131,8 @@ if __name__ == "__main__":
     # Test Case 2: Erroneous / Invalid Stock Symbol
     invalid_ticker = "INVALID_TICKER_999"
     result_invalid = fetch_stock_data(invalid_ticker)
-    print(f"[Test 2] Erroneous Symbol Test: '{invalid_ticker}'")
+    print(f"\n[Test 2] Erroneous Symbol Test: '{invalid_ticker}'")
     print(f" -> Handled Gracefully: {not result_invalid['success']}")
     print(f" -> Error Message     : {result_invalid.get('error')}")
 
-    print(" ALL DATA PARSER TESTS EXECUTED!")
+    print("\nALL DATA PARSER TESTS EXECUTED!")

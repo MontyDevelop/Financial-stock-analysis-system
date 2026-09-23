@@ -1,5 +1,5 @@
-import hashlib
-import os
+# import hashlib
+# import os
 
 # password = "TraderPass1234!"
 
@@ -39,3 +39,38 @@ import os
 
 
 # print(datetime.datetime.now())
+
+
+
+# -------------------------------------------------
+
+import urllib.request
+
+url = "https://api.github.com"
+
+response = urllib.request.urlopen(url)
+
+data = response.read()
+
+# print(response)
+# print(data)
+
+
+
+# list1 = [332.41, 337.0, 336.13, 338.98, 336.81]
+# print(list1)
+# print(list1[-5:-3])
+
+# print(list1[-1::])
+
+
+prices = [11,23,45,23,34,56,18,66,76,77,49,59,78,68,59,65,72,73,74,81,85,90]
+# print(len(prices))
+
+# print(prices[-10:])
+
+deltas = []
+for i in range(1, len(prices)):
+    deltas.append(prices[i] - prices[i - 1])
+    
+print(deltas)
