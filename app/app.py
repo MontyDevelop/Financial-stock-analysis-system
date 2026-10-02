@@ -4,6 +4,15 @@ import sqlite3
 from database import get_db_connection, hash_password, init_db, verify_password
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 
+from algorithms import (
+    calculate_linear_regression,
+    calculate_rsi,
+    calculate_sma,
+    merge_sort_stocks,
+)
+
+from data_parser import fetch_stock_data
+
 # Initialize Flask Central Application
 app = Flask(__name__, template_folder="../templates", static_folder="../static")
 
@@ -185,40 +194,88 @@ def login():
 
 # ROUTE 4: Protected Dashboard Placeholder
 
-@app.route("/dashboard")
-def dashboard():
-    """Protected Dashboard Route. Redirects unauthenticated traffic to login."""
-    if "user_id" not in session:
-        flash(
-            "Unauthorized access: Please log in to access your dashboard.",
-            "danger",
-        )
-        return redirect(url_for("login"))
+MARKET_BASKET = ['AAPL','MFST','NVDA','TSLA','AMZN','GOOGL','META']
 
-    return f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <title>Dashboard - Financial Stock Analytics</title>
-        <style>
-            body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7f6; padding: 40px; text-align: center; }}
-            .card {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }}
-            h2 {{ color: #1a237e; }}
-            .user-tag {{ display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 6px 14px; border-radius: 20px; font-weight: bold; margin: 15px 0; }}
-            .btn-logout {{ display: inline-block; margin-top: 20px; padding: 10px 20px; background: #d32f2f; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; }}
-            .btn-logout:hover {{ opacity: 0.9; }}
-        </style>
-    </head>
-    <body>
-        <div class="card">
-            <h2>Financial Stock Analytics System</h2>
-            <div class="user-tag">✓ Authenticated User: {session.get('username')} (ID: {session.get('user_id')})</div>
-            <p>Session active with complete 3NF database access. Module 2 (Data Parser) & Module 3 (DSA) will plug directly into this view.</p>
-            <a href="{url_for('logout')}" class="btn-logout">Sign Out</a>
-        </div>
-    </body>
-    </html>
-    """
+@app.route("/dashboard", methods=["GET", "POST"])
+def dashboard():
+  """Main Analytics Dashboard.
+
+  Fetches live data, computes technical indicators, and renders Chart.js
+  visuals alongside the Top 5 Merge-Sorted leaderboard.
+  """
+  if "user_id" not in session:
+    flash("Unauthorized access: Please log in first.", "danger")
+    return redirect(url_for("login"))
+
+  
+  ticker = (
+      request.args.get("ticker", "AAPL").strip().upper()
+      if request.method == "GET"
+      else request.form.get("ticker", "AAPL").strip().upper()
+  )
+
+  
+  market_payload = fetch_stock_data(ticker)
+
+  if not market_payload["success"]:
+    flash(market_payload.get("error", "Failed to retrieve data."), "danger")
+    
+    target_data = {
+        "symbol": ticker,
+        "current_price": 0.0,
+        "currency": "USD",
+        "close_prices": [],
+        "timestamps": [],
+        "sma_10": None,
+        "rsi_14": 50.0,
+        "regression": None,
+    }
+  else:
+    prices = market_payload["close_prices"]
+    
+    sma_val = calculate_sma(prices, time_window=10)
+    rsi_val = calculate_rsi(prices, period=14)
+    reg_val = calculate_linear_regression(prices, forecast_days=7)
+
+    target_data = {
+        "symbol": market_payload["symbol"],
+        "current_price": market_payload["current_price"],
+        "currency": market_payload["currency"],
+        "close_prices": prices,
+        
+        "labels": [
+            datetime.fromtimestamp(ts).strftime("%b %d")
+            for ts in market_payload["timestamps"]
+        ],
+        "sma_10": sma_val,
+        "rsi_14": rsi_val,
+        "regression": reg_val,
+    }
+
+  
+  leaderboard_candidates = []
+  for sym in MARKET_BASKET:
+    quote = fetch_stock_data(sym)
+    if quote["success"] and len(quote["close_prices"]) >= 2:
+      p_today = quote["close_prices"][-1]
+      p_yesterday = quote["close_prices"][-2]
+      pct_change = round(((p_today - p_yesterday) / p_yesterday) * 100, 2)
+      leaderboard_candidates.append({
+          "symbol": sym,
+          "daily_return_pct": pct_change,
+          "price": p_today,
+      })
+
+  
+  sorted_basket = merge_sort_stocks(leaderboard_candidates)
+  top_5_stocks = sorted_basket[:5]
+
+  return render_template(
+      "dashboard.html",
+      stock=target_data,
+      top_5=top_5_stocks,
+      active_user=session.get("username"),
+  )
 
 
 
