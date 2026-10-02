@@ -134,14 +134,26 @@
     </div>
 </div>
 
-<!-- Chart.js Initialization Script -->
+
+<script id="chart-data-payload" type="application/json">
+    {
+        "labels": {{ (stock.labels if stock.labels else [])|tojson }},
+        "prices": {{ (stock.close_prices if stock.close_prices else [])|tojson }},
+        "forecast": {{ (stock.regression.forecast if stock.regression.forecast else [])|tojson }}
+    }
+</script>
+
+
 <script>
-    const ctx = document.getElementById('stockChart').getContext('2d');
-    
+    // const ctx = document.getElementById('stockChart').getContext('2d');
+    const chartDataElement = document.getElementById('chart-data-payload');
+    const rawData = JSON.parse(chartDataElement.textContent);
+
+
     // Jinja2 injected data
-    const historicalLabels = {{ stock.labels|tojson|safe }};
-    const historicalPrices = {{ stock.close_prices|tojson|safe }};
-    const forecastPrices = {{ (stock.regression.forecast if stock.regression else [])|tojson|safe }};
+    const historicalLabels = rawData.labels || [];
+    const historicalPrices = rawData.prices || [];
+    const forecastPrices = rawData.forecast || [];
     
     // Generate future day labels (+1 to +7)
     const futureLabels = ['+1d', '+2d', '+3d', '+4d', '+5d', '+6d', '+7d'];
@@ -191,6 +203,8 @@
         }
     });
 </script>
+
+
 
 </body>
 </html>
