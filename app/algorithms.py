@@ -18,74 +18,93 @@ def calculate_rsi(prices: list, period: int = 14) -> float | None:
 
     Returns momentum value bounded between 0 and 100.
     """
-    if not prices or len(prices) < period + 1:
-        return 50.0  # Default neutral RSI if historical points are insufficient
 
-    # Compute daily price differences (deltas)
-    deltas = [prices[i] - prices[i - 1] for i in range(1, len(prices))]
+    n = len(prices)
+    if n <= period:
+        return 50.0
 
-    # Initial baseline averages
-    gains = [d if d > 0 else 0.0 for d in deltas[:period]]
-    losses = [-d if d < 0 else 0.0 for d in deltas[:period]]
+    total_gain = 0.0
+    total_loss = 0.0
 
-    avg_gain = sum(gains) / period
-    avg_loss = sum(losses) / period
+    for i in range(1, period + 1):
+        change = prices[i] - prices[i-1]
+        if change > 0:
+            total = total_gain + change
+        else:
+            total_loss = total_loss + abs(change)
 
-    # Wilder's smoothing loop
-    for d in deltas[period:]:
-        gain = d if d > 0 else 0.0
-        loss = -d if d < 0 else 0.0
-        avg_gain = (avg_gain * (period - 1) + gain) / period
-        avg_loss = (avg_loss * (period - 1) + loss) / period
+    avg_gain = total_gain / period
+    avg_loss = total_loss / period
 
-    if avg_loss == 0.0:
-        return 100.0
+    for i in range(period + 1, n-1):
+        change = prices[i] - prices[i-1]
+        if change > 0:
+            avg_gain = ((avg_gain * 13) + change) / 14
+            avg_loss = (avg_loss * 13) / 14
+        else:
+            avg_gain = (avg_gain * 13) / 14
+            avg_loss = ((avg_loss * 13) + abs(change)) / 14
+
+    if avg_loss == 0:
+        return 10.0
 
     rs = avg_gain / avg_loss
     rsi = 100.0 - (100.0 / (1.0 + rs))
     return round(rsi, 2)
 
-
 # ------------ 3. 7-Day Linear Regression Forecasting (y = mx + c) -------
 def calculate_linear_regression(prices: list, forecast_days: int = 7) -> dict | None:
     """Calculates ordinary least squares linear regression (y = mx + c) in O(N) time.
-
     Projects the next 7 future daily price points.
     """
     n = len(prices)
     if n < 2:
         return None
 
-    x = list(range(n))
-    y = prices
+    sum_x = 0.0
+    sum_y = 0.0
+    sum_xy = 0.0
+    sum_x2 = 0.0
 
-    sum_x = sum(x)
-    sum_y = sum(y)
-    sum_xy = sum(xi * yi for xi, yi in zip(x, y))
-    sum_x2 = sum(xi**2 for xi in x)
+    for i in range(0,n):
+        x  = float(i)
+        y = prices[i]
 
-    denominator = n * sum_x2 - (sum_x**2)
+        sum_x = sum_x + x
+        sum_y = sum_y + y
+        sum_xy = sum_xy + (x * y)
+        sum_x2 = sum_x2 + (x * x)
+    
+    # Calculate slope (m) and intercept (c)
+    denominator = (n * sum_x2) - (sum_x * sum_x) 
     if denominator == 0:
-        return None
+        slope = 0.0
+    else:
+        slope = ((n * sum_xy) - (sum_x * sum_y)) / denominator
 
-    m = (n * sum_xy - (sum_x * sum_y)) / denominator
-    c = (sum_y - (m * sum_x)) / n
+    intercept = (sum_y - (slope * sum_x)) / n
 
-    forecast_points = []
-    for day_offset in range(forecast_days):
-        future_x = n + day_offset
-        predicted_val = round(m * future_x + c, 2)
-        forecast_points.append(predicted_val)
+    # Generate 7-day forecast array
 
-    trend = "BULLISH" if m > 0.05 else "BEARISH" if m < -0.05 else "NEUTRAL"
+    forecasts = []
+    for day in range(1, forecast_days + 1):
+        future_x = float(n - 1 + day)
+        predicted_price = (slope * future_x) + intercept
+        forecasts.append(predicted_price)
+
+    if slope  > 0.05:
+        trend = "BULLISH"
+    elif slope < 0.05:
+        trend = "BEARISH"
+    else:
+        trend = "NEUTRAL"
 
     return {
-        "slope_m": round(m, 4),
-        "intercept_c": round(c, 4),
-        "trend": trend,
-        "forecast": forecast_points,
-    }
-
+            "slope_m": round(slope, 4),
+            "intercept_c": round(intercept, 4),
+            "trend": trend,
+            "forecast": forecasts,
+        }
 
 # ----------- 4. Custom Merge Sort (Top 5 Performing Equities) ----------
 def merge_sort_stocks(stock_list: list) -> list:
