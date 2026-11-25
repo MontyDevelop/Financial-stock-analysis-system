@@ -1,15 +1,18 @@
 # ---------------- 1. 10-Day Simple Moving Average (SMA) ----------------
 def calculate_sma(prices: list, time_window: int = 10) -> float | None:
-    """Calculates the Simple Moving Average (SMA) over a sliding window.
-
-    Divides the sum of recent window closing prices by the window size.
-    """
-    if not prices or len(prices) < time_window:
+    if len(prices) < time_window:
         return None
 
-    recent_time_window = prices[-time_window:]
-    prices_sum = sum(recent_time_window)
-    return round(prices_sum / time_window, 2)
+    recent_prices = prices[-time_window:]
+    prices_sum = 0.0
+
+    for price in recent_prices:
+        prices_sum = prices_sum + price
+
+    sma = prices_sum / time_window
+
+    return round(sma, 2)
+
 
 
 # ------------ 2. 14-Period Relative Strength Index (RSI) ---------------
@@ -107,37 +110,54 @@ def calculate_linear_regression(prices: list, forecast_days: int = 7) -> dict | 
         }
 
 # ----------- 4. Custom Merge Sort (Top 5 Performing Equities) ----------
-def merge_sort_stocks(stock_list: list) -> list:
-    """Recursively sorts a list of stock records by 'daily_return_pct' in descending order.
 
-    Guarantees O(N log N) time complexity across all cases.
-    """
-    if len(stock_list) <= 1:
+def merge_sort_stocks(stock_list: list) -> list:
+
+   
+    n = len(stock_list)
+
+    
+    if n <= 1:
         return stock_list
 
-    mid = len(stock_list) // 2
+   
+    mid = n // 2
+
     left_half = merge_sort_stocks(stock_list[:mid])
-    right_half = merge_sort_stocks(stock_list[mid:])
+    right_half = merge_sort_stocks(stock_list[mid:n])
 
-    return _merge(left_half, right_half)
+   
+    return merge_sublists(left_half, right_half)
 
 
-def _merge(left: list, right: list) -> list:
-    merged = []
+def merge_sublists(left: list, right: list) -> list:
+
+    result = []
+   
     i = 0
     j = 0
-
+   
     while i < len(left) and j < len(right):
-        if left[i]["daily_return_pct"] >= right[j]["daily_return_pct"]:
-            merged.append(left[i])
-            i += 1
-        else:
-            merged.append(right[j])
-            j += 1
 
-    merged.extend(left[i:])
-    merged.extend(right[j:])
-    return merged
+        if left[i]["daily_return_pct"] >= right[j]["daily_return_pct"]:
+            result.append(left[i])
+            i = i + 1
+
+        else:
+            result.append(right[j])
+            j = j + 1
+
+
+    while i < len(left):
+        result.append(left[i])
+        i = i + 1
+
+    while j < len(right):
+        result.append(right[j])
+        j = j + 1
+
+    return result
+
 
 
 # MODULE SMOKE TEST & BENCHMARK
